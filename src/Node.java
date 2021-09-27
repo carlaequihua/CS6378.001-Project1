@@ -68,7 +68,16 @@ class Node {
     }
 
     public void tearDown() {
-        //Your code goes here
+        connections.values().forEach(socket -> {
+            while (!socket.isClosed()) {
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        connections.clear();
     }
 
     //assuming that this method parses through the config file and saves the info
@@ -105,7 +114,6 @@ class Node {
                 nodePort[j] = Integer.parseInt(temp[2]);
             }
 
-            //unnecessary? this is just us finding the node number and port
             for (int i = 0; i < numberOfNodes; i++) {
                 if (i == nodeIdentifier.getID()) {
                     mynodenumber = i;
@@ -116,7 +124,7 @@ class Node {
 
             ArrayList<Integer> nodeNeighbor = new ArrayList<>(); // store neighbour node number
 
-            j += 1 + mynodenumber;
+            j += 1 + nodeIdentifier.getID();
             String[] itemp = lines.get(j).split(" ");
             for (String i : itemp) {
                 if (i.equals("#")) {
