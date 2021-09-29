@@ -1,7 +1,5 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,8 +9,10 @@ import java.util.Map;
 class Node {
     // node identifier
     private NodeID identifier;
+    private int myPort;
 
-    private Map<NodeID, Socket> connections = new HashMap<>();
+    //private Map<NodeID, Socket> connections = new HashMap<>();
+    private Map<NodeID, ConnectionManager> connections = new HashMap<>();
     private NodeID[] neighbors;
 
     //index of these arrays is the node id
@@ -24,23 +24,42 @@ class Node {
         this.identifier = identifier;
         readConfigFile(identifier, configFile);
 
+        //Attempt to connect to a neighbor node
         createOutgoingConnections();
+
+        try {
+            Socket socket = null;
+
+            //Listen to my port number in the config file
+            ServerSocket listenSocket = new ServerSocket(myPort);
+            System.out.println("Listening port : " + myPort);
+
+            while (true) {
+                //When a neighbor node connects to the listen port
+                try {
+                    socket = listenSocket.accept();
+                    Thread clientHandler = new ClientHandler(socket, listener);
+                    clientHandler.start();
+
+                    System.out.println("A new client is connected : " + socket);
+                }
+                catch (IOException e) {
+                    if(socket!=null && !socket.isClosed())
+                        socket.close();
+                    e.printStackTrace();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void createOutgoingConnections() {
         for (int x = 0; x < neighbors.length; x++) {
-            while (true) {
-                Socket socket;
-                try {
-                    socket = new Socket(nodeHost[neighbors[x].getID()], nodePort[neighbors[x].getID()]);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    continue;
-                }
-                connections.put(neighbors[x], socket);
-            }
+            ConnectionManager thread = new ConnectionManager(nodeHost[neighbors[x].getID()], nodePort[neighbors[x].getID()]);
+            thread.start();
+            connections.put(neighbors[x], thread);
         }
-
     }
 
     // methods
@@ -50,8 +69,11 @@ class Node {
 
     public void send(Message message, NodeID destination) {
         try {
-            OutputStream outputStream = connections.get(destination).getOutputStream();
-            outputStream.write(message.data);
+            Socket socket = connections.get(destination).getSocket();
+            if(socket != null && !socket.isClosed()) {
+                OutputStream outputStream = socket.getOutputStream();
+                outputStream.write(message.data);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -60,7 +82,9 @@ class Node {
     public void sendToAll(Message message) {
         connections.values().forEach(connection -> {
             try {
-                connection.getOutputStream().write(message.data);
+                if(connection.getSocket() != null && !connection.getSocket().isClosed()) {
+                    connection.getSocket().getOutputStream().write(message.data);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -68,10 +92,10 @@ class Node {
     }
 
     public void tearDown() {
-        connections.values().forEach(socket -> {
-            while (!socket.isClosed()) {
+        connections.values().forEach(thread -> {
+            while (!thread.getSocket().isClosed()) {
                 try {
-                    socket.close();
+                    thread.getSocket().close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -84,7 +108,8 @@ class Node {
     private void readConfigFile(NodeID nodeIdentifier, String configFile) {
         try {
             //Begin read file
-            int myPort = 0, mynodenumber = 0;
+            myPort = 0;
+            int mynodenumber = 0;
             String line_txt = null;
             int numberOfNodes = 0;
 
@@ -143,3 +168,4 @@ class Node {
         }
     }
 }
+
