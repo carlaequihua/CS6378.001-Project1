@@ -38,7 +38,7 @@ class Node {
                 //When a neighbor node connects to the listen port
                 try {
                     socket = listenSocket.accept();
-                    Thread clientHandler = new ClientHandler(socket, listener);
+                    Thread clientHandler = new ClientHandler(socket, listener, getClientNodeId(socket));
                     clientHandler.start();
 
                     System.out.println("[SERVER] NEW CONNECTION FROM : " + socket);
@@ -53,6 +53,11 @@ class Node {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private int getClientNodeId(Socket socket) {
+        System.out.println(socket.getLocalAddress().getHostAddress().substring(socket.getLocalAddress().getHostAddress().indexOf("dc"), socket.getLocalAddress().getHostAddress().indexOf("dc")+2));
+        return Integer.parseInt(socket.getLocalAddress().getHostAddress().substring(socket.getLocalAddress().getHostAddress().indexOf("dc"), socket.getLocalAddress().getHostAddress().indexOf("dc")+2));
     }
 
     private void createOutgoingConnections() {

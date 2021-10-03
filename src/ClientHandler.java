@@ -10,7 +10,7 @@ public class ClientHandler extends Thread {
     final int maxBufferSize;
     final NodeID clientNodeId;
 
-    public ClientHandler(Socket socket, Listener listener) throws IOException {
+    public ClientHandler(Socket socket, Listener listener, int clientIdentifier) throws IOException {
         this.socket = socket;
         this.dis = new DataInputStream(socket.getInputStream());
         this.dos = new DataOutputStream(socket.getOutputStream());
@@ -18,8 +18,7 @@ public class ClientHandler extends Thread {
         this.maxBufferSize = 2048;
 
         //TODO : Find & Set Client's NodeId
-        this.clientNodeId = new NodeID(0);
-//        this.clientNodeId = new NodeID(clientIdentifier);
+        this.clientNodeId = new NodeID(clientIdentifier);
     }
 
     public void run() {
@@ -34,14 +33,14 @@ public class ClientHandler extends Thread {
                     System.out.println("[SERVER] MSG RECEIVED : " + Util.getMessageStr(m));
 
                     //TODO: When a message is received, the listener's receive() is called.
-                    //listener.receive(m);
+                    listener.receive(m);
                 }
 
             } catch (SocketException e) {
                 //TODO: When a connection has been terminated by a neighbor, the listener's broken() is called.
                 System.out.println("[SERVER] CONNECTION CLOSED FROM "+socket);
                 e.printStackTrace();
-                //listener.broken(clientNodeId);
+                listener.broken(clientNodeId);
                 break;
             }
             catch (IOException e) {
