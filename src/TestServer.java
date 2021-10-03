@@ -1,3 +1,4 @@
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -35,11 +36,13 @@ class TestClientHandler extends Thread {
     final DataInputStream dis;
     final DataOutputStream dos;
     final Socket s;
+    final int maxBufferSize;
 
     public TestClientHandler(Socket s, DataInputStream dis, DataOutputStream dos) {
         this.s = s;
         this.dis = dis;
         this.dos = dos;
+        this.maxBufferSize = 2048;
     }
 
     public void run() {
@@ -47,8 +50,17 @@ class TestClientHandler extends Thread {
 
         while(true) {
             try {
-                received = dis.readUTF();
-                System.out.println(received);
+//                received = dis.readUTF();
+//                System.out.println(received);
+
+                byte buffer[] = new byte[maxBufferSize];
+                int size = dis.read(buffer);
+                if (size > 0) {
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    baos.write(buffer, 0, size);
+                    Message m = Util.bytesToMessage(baos.toByteArray());
+                    System.out.println("MSG RECEIVED : " + Util.getMessageStr(m));
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }

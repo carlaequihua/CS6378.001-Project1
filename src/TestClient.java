@@ -1,4 +1,4 @@
-import java.io.DataOutputStream;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 
@@ -14,7 +14,12 @@ public class TestClient {
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
 
             while (true) {
-                dos.writeUTF("Hi");
+//                dos.writeUTF("Hi");
+                Payload p = new Payload(0);
+                Message m = new Message(new NodeID(11), p.toBytes());
+                dos.write(Util.messageToBytes(m));
+                System.out.println("MSG SENT : " + Util.getMessageStr(m));
+
                 Thread.sleep(2000);
             }
         } catch (Exception e) {

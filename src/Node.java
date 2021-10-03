@@ -32,7 +32,7 @@ class Node {
 
             //Listen to my port number in the config file
             ServerSocket listenSocket = new ServerSocket(myPort);
-            System.out.println("Listening port : " + myPort);
+            System.out.println("[SERVER] LISTEN : Port(" + myPort + ")");
 
             while (true) {
                 //When a neighbor node connects to the listen port
@@ -41,11 +41,12 @@ class Node {
                     Thread clientHandler = new ClientHandler(socket, listener);
                     clientHandler.start();
 
-                    System.out.println("A new client is connected : " + socket);
+                    System.out.println("[SERVER] NEW CONNECTION FROM : " + socket);
                 }
                 catch (IOException e) {
-                    if(socket!=null && !socket.isClosed())
+                    if(socket!=null && !socket.isClosed()) {
                         socket.close();
+                    }
                     e.printStackTrace();
                 }
             }
@@ -71,8 +72,7 @@ class Node {
         try {
             Socket socket = connections.get(destination).getSocket();
             if(socket != null && !socket.isClosed()) {
-                OutputStream outputStream = socket.getOutputStream();
-                outputStream.write(message.data);
+                socket.getOutputStream().write(Util.messageToBytes(message));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -82,8 +82,9 @@ class Node {
     public void sendToAll(Message message) {
         connections.values().forEach(connection -> {
             try {
-                if(connection.getSocket() != null && !connection.getSocket().isClosed()) {
-                    connection.getSocket().getOutputStream().write(message.data);
+                Socket socket = connection.getSocket();
+                if(socket != null && !socket.isClosed()) {
+                    socket.getOutputStream().write(Util.messageToBytes(message));
                 }
             } catch (IOException e) {
                 e.printStackTrace();
