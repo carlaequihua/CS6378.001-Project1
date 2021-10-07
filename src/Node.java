@@ -1,4 +1,5 @@
 import java.io.*;
+import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -52,6 +53,10 @@ class Node {
                     e.printStackTrace();
                 }
             }
+        } catch (BindException be) {
+            System.out.println("Port number "+myPort+" is already in use.");
+            System.out.println("Node is shutting down.");
+            System.exit(0);
         } catch (IOException e) {
             e.printStackTrace();
         }

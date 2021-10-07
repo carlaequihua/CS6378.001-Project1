@@ -22,7 +22,7 @@ echo "Cleanup start"
 
 echo ""
 echo "Activate servers"
-cat $CONFIGLOCAL | sed -e "s/#.*//" | sed -e "/^\s*$/d" |
+cat $CONFIGLOCAL | sed -e "s/#.*//" | sed -e "/^\s*$/d" | sed -e "s/\r$//" |
 (
     read i
     while [[ $n -lt $i ]] ;

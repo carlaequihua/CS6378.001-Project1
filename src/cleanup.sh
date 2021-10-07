@@ -14,7 +14,7 @@ CONFIGLOCAL=$HOME/launch/config.txt
 
 n=0
 
-cat $CONFIGLOCAL | sed -e "s/#.*//" | sed -e "/^\s*$/d" |
+cat $CONFIGLOCAL | sed -e "s/#.*//" | sed -e "/^\s*$/d" | sed -e "s/\r$//" |
 (
     read i
     while [[ $n -lt $i ]]
