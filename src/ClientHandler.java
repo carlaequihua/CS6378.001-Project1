@@ -1,4 +1,7 @@
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 
@@ -10,15 +13,13 @@ public class ClientHandler extends Thread {
     final int maxBufferSize;
     final NodeID clientNodeId;
 
-    public ClientHandler(Socket socket, Listener listener, int clientIdentifier) throws IOException {
+    public ClientHandler(Socket socket, Listener listener, NodeID clientIdentifier) throws IOException {
         this.socket = socket;
         this.dis = new DataInputStream(socket.getInputStream());
         this.dos = new DataOutputStream(socket.getOutputStream());
         this.listener = listener;
         this.maxBufferSize = 2048;
-
-        //TODO : Find & Set Client's NodeId
-        this.clientNodeId = new NodeID(clientIdentifier);
+        this.clientNodeId = clientIdentifier;
     }
 
     public void run() {
@@ -30,9 +31,7 @@ public class ClientHandler extends Thread {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     baos.write(buffer, 0, size);
                     Message m = Util.bytesToMessage(baos.toByteArray());
-                    System.out.println("[SERVER] MSG RECEIVED : " + Util.getMessageStr(m));
-
-                    //TODO: When a message is received, the listener's receive() is called.
+                    System.out.println("[SERVER] MSG RECEIVED FROM : " + Util.getMessageStr(m));
                     listener.receive(m);
                 }
 

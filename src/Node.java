@@ -7,12 +7,12 @@ import java.util.Map;
 
 //Object to represent a node in the distributed system
 class Node {
-    // node identifier
     private NodeID identifier;
     private int myPort;
 
-    //private Map<NodeID, Socket> connections = new HashMap<>();
+    private Map<NodeID, ClientHandler> servers = new HashMap<>();
     private Map<NodeID, ConnectionManager> connections = new HashMap<>();
+    private Map<String, NodeID> hostnames = new HashMap<>();
     private NodeID[] neighbors;
 
     //index of these arrays is the node id
@@ -34,13 +34,15 @@ class Node {
             ServerSocket listenSocket = new ServerSocket(myPort);
             System.out.println("[SERVER] LISTEN : Port(" + myPort + ")");
 
-            while (true) {
+            while (servers.size() < neighbors.length) {
                 //When a neighbor node connects to the listen port
                 try {
                     socket = listenSocket.accept();
-                    Thread clientHandler = new ClientHandler(socket, listener, getClientNodeId(socket));
-                    clientHandler.start();
+                    NodeID clientIdentifier = getClientNodeId(socket);
+                    ClientHandler ch = new ClientHandler(socket, listener, clientIdentifier);
 
+                    ch.start();
+                    servers.put(clientIdentifier, ch);
                     System.out.println("[SERVER] NEW CONNECTION FROM : " + socket);
                 }
                 catch (IOException e) {
@@ -55,14 +57,13 @@ class Node {
         }
     }
 
-    private int getClientNodeId(Socket socket) {
-        System.out.println(socket.getLocalAddress().getHostAddress().substring(socket.getLocalAddress().getHostAddress().indexOf("dc"), socket.getLocalAddress().getHostAddress().indexOf("dc")+2));
-        return Integer.parseInt(socket.getLocalAddress().getHostAddress().substring(socket.getLocalAddress().getHostAddress().indexOf("dc"), socket.getLocalAddress().getHostAddress().indexOf("dc")+2));
+    private NodeID getClientNodeId(Socket socket) {
+        return hostnames.get(socket.getInetAddress().getHostName().split("\\.")[0]);
     }
 
     private void createOutgoingConnections() {
         for (int x = 0; x < neighbors.length; x++) {
-            ConnectionManager thread = new ConnectionManager(nodeHost[neighbors[x].getID()], nodePort[neighbors[x].getID()]);
+            ConnectionManager thread = new ConnectionManager(nodeHost[neighbors[x].getID()], nodePort[neighbors[x].getID()], neighbors[x]);
             thread.start();
             connections.put(neighbors[x], thread);
         }
@@ -74,26 +75,12 @@ class Node {
     }
 
     public void send(Message message, NodeID destination) {
-        try {
-            Socket socket = connections.get(destination).getSocket();
-            if(socket != null && !socket.isClosed()) {
-                socket.getOutputStream().write(Util.messageToBytes(message));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        connections.get(destination).setMsgQueue(message);
     }
 
     public void sendToAll(Message message) {
         connections.values().forEach(connection -> {
-            try {
-                Socket socket = connection.getSocket();
-                if(socket != null && !socket.isClosed()) {
-                    socket.getOutputStream().write(Util.messageToBytes(message));
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            connection.setMsgQueue(message);
         });
     }
 
@@ -125,6 +112,7 @@ class Node {
             ArrayList<String> lines = new ArrayList<>(); // store each line of file in a list
 
             while ((line_txt = rline.readLine()) != null) {
+                line_txt = line_txt.replaceAll("^\\s+", "");
                 if (line_txt.matches("^[0-9].*")) {
                     lines.add(line_txt);
                 }
@@ -143,6 +131,7 @@ class Node {
                 String[] temp = lines.get(j + 1).split(" ");
                 nodeHost[j] = temp[1];
                 nodePort[j] = Integer.parseInt(temp[2]);
+                hostnames.put(temp[1], new NodeID(Integer.parseInt(temp[0])));
             }
 
             for (int i = 0; i < numberOfNodes; i++) {

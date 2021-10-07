@@ -158,7 +158,7 @@ class Application implements Listener
 		}
 		detectingRing = false;
 		terminating = false;
-		
+
 		//Node 0 initiates ring detection algorithm
 		if(myID.getID() == 0)
 		{
