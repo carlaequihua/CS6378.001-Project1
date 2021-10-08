@@ -32,6 +32,11 @@ public class ConnectionManager extends Thread {
 
     public void setTearDown() {
         isTearDown = true;
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean send(Message m) {
