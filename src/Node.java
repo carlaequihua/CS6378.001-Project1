@@ -162,7 +162,7 @@ class Node {
                 neighbors[x] = new NodeID(nodeNeighbor.get(x));
             }
 
-            System.out.println("My nodenumber: " + mynodenumber + ";  " + "My MachineName: " + nodeIdentifier + ";  " + "My port number " + myPort);
+            System.out.println("My nodenumber: " + mynodenumber + ";  " + "My MachineName: " + nodeIdentifier.getID() + ";  " + "My port number " + myPort);
         } catch (Exception e) {
             e.printStackTrace();
         }
