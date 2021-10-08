@@ -17,7 +17,7 @@ PROG=Main
 
 n=0
 
-echo "Cleanup start"
+./dist.sh
 ./cleanup.sh
 
 echo ""

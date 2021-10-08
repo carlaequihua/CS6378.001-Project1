@@ -30,11 +30,15 @@ public class ConnectionManager extends Thread {
         msgQueue.add(m);
     }
 
+    public void setTearDown() {
+        isTearDown = true;
+    }
+
     private boolean send(Message m) {
         try {
             if(socket != null && !socket.isClosed()) {
                 socket.getOutputStream().write(Util.messageToBytes(m));
-                System.out.println("[CLIENT] MSG SENT (Node " +m.source.getID()+ " -> Node " +serverIdentifier.getID()+ " / " +Payload.getPayload(m.data).messageType+ ")");
+                System.out.println("[CLIENT] MSG SENT : NodeId(" +m.source.getID()+ ") -> NodeId(" +serverIdentifier.getID()+ ") / Data(" +Payload.getPayload(m.data).messageType+ ")");
                 return true;
             }
         } catch (IOException e) {
@@ -59,9 +63,9 @@ public class ConnectionManager extends Thread {
                         ie.printStackTrace();
                     }
                 }
-            }
+
             // If msgQueue is not empty
-            else {
+            } else {
                 if(msgQueue.size() > 0) {
                     Message m = (Message) msgQueue.get(0);
                     if (send(m)) {

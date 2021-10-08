@@ -27,21 +27,30 @@ public class ClientHandler extends Thread {
             try {
                 byte buffer[] = new byte[maxBufferSize];
                 int size = dis.read(buffer);
+
+                // When a server receive a message from a neighbor
                 if (size > 0) {
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     baos.write(buffer, 0, size);
                     Message m = Util.bytesToMessage(baos.toByteArray());
                     System.out.println("[SERVER] MSG RECEIVED FROM : " + Util.getMessageStr(m));
                     listener.receive(m);
+
+                // When a connection has been terminated by a neighbor
+                } else if (size == -1) {
+                    System.out.println("[SERVER] CONNECTION CLOSED FROM "+socket);
+                    listener.broken(clientNodeId);
+                    break;
                 }
 
+            // When neighbor client has been killed, etc
             } catch (SocketException e) {
-                //TODO: When a connection has been terminated by a neighbor, the listener's broken() is called.
                 System.out.println("[SERVER] CONNECTION CLOSED FROM "+socket);
-                e.printStackTrace();
                 listener.broken(clientNodeId);
-                break;
+                e.printStackTrace();
             }
+
+            // When other exception occurred
             catch (IOException e) {
                 e.printStackTrace();
             }

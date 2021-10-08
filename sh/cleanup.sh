@@ -14,6 +14,7 @@ CONFIGLOCAL=$HOME/launch/config.txt
 
 n=0
 
+echo "Cleanup start"
 cat $CONFIGLOCAL | sed -e "s/#.*//" | sed -e "/^\s*$/d" | sed -e "s/\r$//" |
 (
     read i
@@ -30,5 +31,4 @@ cat $CONFIGLOCAL | sed -e "s/#.*//" | sed -e "/^\s*$/d" | sed -e "s/\r$//" |
     done
    
 )
-
 echo "Cleanup complete"

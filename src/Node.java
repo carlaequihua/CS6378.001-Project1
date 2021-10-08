@@ -10,6 +10,7 @@ import java.util.Map;
 class Node {
     private NodeID identifier;
     private int myPort;
+    private boolean isTearDown;
 
     private Map<NodeID, ClientHandler> servers = new HashMap<>();
     private Map<NodeID, ConnectionManager> connections = new HashMap<>();
@@ -23,6 +24,7 @@ class Node {
     // constructor
     public Node(NodeID identifier, String configFile, Listener listener) {
         this.identifier = identifier;
+        this.isTearDown = false;
         readConfigFile(identifier, configFile);
 
         //Attempt to connect to a neighbor node
@@ -90,16 +92,22 @@ class Node {
     }
 
     public void tearDown() {
-        connections.values().forEach(thread -> {
-            while (!thread.getSocket().isClosed()) {
-                try {
-                    thread.getSocket().close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+        if(!isTearDown) {
+            System.out.println("[NODE] TEAR DOWN CALLED");
+            connections.values().forEach(thread -> {
+                while (!thread.getSocket().isClosed()) {
+                    try {
+                        thread.setTearDown();
+                        thread.getSocket().close();
+                        System.out.println("[NODE] TEARD DOWN : Socket Closed " + thread.getSocket());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
-        });
-        connections.clear();
+            });
+            connections.clear();
+            isTearDown = true;
+        }
     }
 
     //assuming that this method parses through the config file and saves the info
