@@ -47,16 +47,15 @@ class Node {
                     ch.start();
                     servers.put(clientIdentifier, ch);
                     System.out.println("[SERVER] NEW CONNECTION FROM : " + socket);
-                }
-                catch (IOException e) {
-                    if(socket!=null && !socket.isClosed()) {
+                } catch (IOException e) {
+                    if (socket != null && !socket.isClosed()) {
                         socket.close();
                     }
                     e.printStackTrace();
                 }
             }
         } catch (BindException be) {
-            System.out.println("Port number "+myPort+" is already in use.");
+            System.out.println("Port number " + myPort + " is already in use.");
             System.out.println("Node is shutting down.");
             System.exit(0);
         } catch (IOException e) {
@@ -92,20 +91,22 @@ class Node {
     }
 
     public void tearDown() {
-        if(!isTearDown) {
+        if (!isTearDown) {
             System.out.println("[NODE] TEAR DOWN CALLED");
-            connections.values().forEach(thread -> {
-                while (!thread.getSocket().isClosed()) {
-                    try {
-                        thread.setTearDown();
-                        thread.getSocket().close();
-                        System.out.println("[NODE] TEARD DOWN : Socket Closed " + thread.getSocket());
-                    } catch (IOException e) {
-                        e.printStackTrace();
+            if( null != connections && null != connections.values()){
+                connections.values().forEach(thread -> {
+                    while (!thread.getSocket().isClosed()) {
+                        try {
+                            thread.setTearDown();
+                            thread.getSocket().close();
+                            System.out.println("[NODE] TEARD DOWN : Socket Closed " + thread.getSocket());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
-                }
-            });
-            connections.clear();
+                });
+                connections.clear();
+            }
             isTearDown = true;
         }
     }
@@ -127,7 +128,11 @@ class Node {
             while ((line_txt = rline.readLine()) != null) {
                 line_txt = line_txt.replaceAll("^\\s+", "");
                 if (line_txt.matches("^[0-9].*")) {
+                    if (line_txt.contains("#")) {
+                        line_txt = line_txt.substring(0, line_txt.indexOf("#"));
+                    }
                     lines.add(line_txt);
+                    System.out.println(line_txt);
                 }
             }
             rline.close();
@@ -158,7 +163,7 @@ class Node {
             ArrayList<Integer> nodeNeighbor = new ArrayList<>(); // store neighbour node number
 
             j += 1 + nodeIdentifier.getID();
-            String[] itemp = lines.get(j).split(" ");
+            String[] itemp = lines.get(j).trim().split(" ");
             for (String i : itemp) {
                 if (i.equals("#")) {
                     break;
