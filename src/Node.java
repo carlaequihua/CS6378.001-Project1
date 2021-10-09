@@ -215,7 +215,6 @@ class ServerManager extends Thread {
                 for(NodeID node:neighbors) {
                     if (node.getID() == clientIdentifier.getID()) {
                         servers.put(clientIdentifier, ch);
-                        System.out.println(servers.size());
                     }
                 }
                 System.out.println("[SERVER] NEW CONNECTION FROM : " + socket);
