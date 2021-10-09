@@ -52,6 +52,7 @@ public class ConnectionManager extends Thread {
         return false;
     }
 
+    @Override
     public void run() {
         while (!isTearDown) {
             // When Connection cannot be established => Reconnect

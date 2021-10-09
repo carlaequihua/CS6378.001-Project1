@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +13,7 @@ class Node {
     private int myPort;
     private boolean isTearDown;
 
-    private Map<NodeID, ClientHandler> servers = new HashMap<>();
+    private ServerManager sm;
     private Map<NodeID, ConnectionManager> connections = new HashMap<>();
     private Map<String, NodeID> hostnames = new HashMap<>();
     private NodeID[] neighbors;
@@ -31,30 +32,13 @@ class Node {
         createOutgoingConnections();
 
         try {
-            Socket socket = null;
-
             //Listen to my port number in the config file
             ServerSocket listenSocket = new ServerSocket(myPort);
-            System.out.println("[SERVER] LISTEN : Port(" + myPort + ")");
+            System.out.println("[SERVER] LISTEN : Port("+myPort+")");
 
-            while (servers.size() < neighbors.length) {
-                //When a neighbor node connects to the listen port
-                try {
-                    socket = listenSocket.accept();
-                    NodeID clientIdentifier = getClientNodeId(socket);
-                    ClientHandler ch = new ClientHandler(socket, listener, clientIdentifier);
+            sm = new ServerManager(listenSocket, neighbors, hostnames, listener);
+            sm.start();
 
-                    ch.start();
-                    servers.put(clientIdentifier, ch);
-                    System.out.println("[SERVER] NEW CONNECTION FROM : " + socket);
-                }
-                catch (IOException e) {
-                    if(socket!=null && !socket.isClosed()) {
-                        socket.close();
-                    }
-                    e.printStackTrace();
-                }
-            }
         } catch (BindException be) {
             System.out.println("Port number "+myPort+" is already in use.");
             System.out.println("Node is shutting down.");
@@ -64,9 +48,6 @@ class Node {
         }
     }
 
-    private NodeID getClientNodeId(Socket socket) {
-        return hostnames.get(socket.getInetAddress().getHostName().split("\\.")[0]);
-    }
 
     private void createOutgoingConnections() {
         for (int x = 0; x < neighbors.length; x++) {
@@ -82,7 +63,10 @@ class Node {
     }
 
     public void send(Message message, NodeID destination) {
-        connections.get(destination).setMsgQueue(message);
+        for(NodeID node:neighbors) {
+            if(node.getID() == destination.getID())
+                connections.get(node).setMsgQueue(message);
+        }
     }
 
     public void sendToAll(Message message) {
@@ -94,6 +78,7 @@ class Node {
     public void tearDown() {
         if(!isTearDown) {
             System.out.println("[NODE] TEAR DOWN CALLED");
+            sm.setTearDown();
             connections.values().forEach(thread -> {
                 while (!thread.getSocket().isClosed()) {
                     try {
@@ -173,6 +158,75 @@ class Node {
             System.out.println("My nodenumber: " + mynodenumber + ";  " + "My MachineName: " + nodeIdentifier.getID() + ";  " + "My port number " + myPort);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+}
+
+class ServerManager extends Thread {
+
+    private Map<NodeID, ClientHandler> servers;
+    private Map<String, NodeID> hostnames;
+    private boolean isTearDown;
+
+    private ServerSocket listenSocket;
+    private NodeID[] neighbors;
+    private Listener listener;
+
+    public ServerManager(ServerSocket listenSocket, NodeID[] neighbors, Map<String, NodeID> hostnames, Listener listener) {
+        this.servers = new HashMap<>();
+        this.isTearDown = false;
+
+        this.listenSocket = listenSocket;
+        this.neighbors = neighbors;
+        this.hostnames = hostnames;
+        this.listener = listener;
+    }
+
+    public void setTearDown() {
+        isTearDown = true;
+    }
+
+    public Map<NodeID, ClientHandler> getServerMap() {
+        return servers;
+    }
+
+    private NodeID getClientNodeId(Socket socket) {
+        return hostnames.get(socket.getInetAddress().getHostName().split("\\.")[0]);
+    }
+
+    @Override
+    public void run() {
+        while (servers.size() < neighbors.length) {
+//        while (!isTearDown) {
+            Socket socket = null;
+
+            //When a neighbor node connects to the listen port
+            try {
+                listenSocket.setSoTimeout(5000);
+                socket = listenSocket.accept();
+                NodeID clientIdentifier = getClientNodeId(socket);
+                ClientHandler ch = new ClientHandler(socket, listener, clientIdentifier);
+                ch.start();
+
+                for(NodeID node:neighbors) {
+                    if (node.getID() == clientIdentifier.getID()) {
+                        servers.put(clientIdentifier, ch);
+                        System.out.println(servers.size());
+                    }
+                }
+                System.out.println("[SERVER] NEW CONNECTION FROM : " + socket);
+            } catch (SocketTimeoutException ste) {
+                continue;
+            } catch (IOException e) {
+                if(socket!=null && !socket.isClosed()) {
+                    try {
+                        socket.close();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                e.printStackTrace();
+            }
         }
     }
 }
