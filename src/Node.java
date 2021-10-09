@@ -112,7 +112,11 @@ class Node {
             while ((line_txt = rline.readLine()) != null) {
                 line_txt = line_txt.replaceAll("^\\s+", "");
                 if (line_txt.matches("^[0-9].*")) {
+                    if (line_txt.contains("#")) {
+                        line_txt = line_txt.substring(0, line_txt.indexOf("#"));
+                    }
                     lines.add(line_txt);
+                    System.out.println(line_txt);
                 }
             }
             rline.close();
@@ -143,7 +147,7 @@ class Node {
             ArrayList<Integer> nodeNeighbor = new ArrayList<>(); // store neighbour node number
 
             j += 1 + nodeIdentifier.getID();
-            String[] itemp = lines.get(j).split(" ");
+            String[] itemp = lines.get(j).trim().split(" ");
             for (String i : itemp) {
                 if (i.equals("#")) {
                     break;
