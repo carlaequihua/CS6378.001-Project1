@@ -7,7 +7,7 @@ public class Main
 		String configFile = args[1];
 		
 		//Launch application and wait for it to terminate
-		Application_deprecated myApp = new Application_deprecated(id, configFile);
+		Application myApp = new Application(id, configFile);
 		myApp.run();	
 	}
 }
