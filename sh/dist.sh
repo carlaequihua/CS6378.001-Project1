@@ -1,7 +1,7 @@
 #!/bin/bash
 
-NETID=hxc200011
-CONFIGLOCAL=$HOME/launch/config.txt
+NETID=cme150030
+CONFIGLOCAL=$HOME/IdeaProjects/CS3678.001-Project1/src/config.txt
 FILES="./TestProj ./launch"
 TARGET=/
 #FILES=./TestProj/bin/Node.class

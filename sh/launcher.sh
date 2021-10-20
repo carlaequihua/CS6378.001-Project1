@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Change this to your netid
-netid=hxc200011
+netid=cme150030
 
 # Root directory of your project
-PROJDIR=/home/011/h/hx/hxc200011/TestProj
+PROJDIR=/home/012/c/cm/cme150030/cs6378
 
 # Directory where the config file is located on your local system
-CONFIGLOCAL=$HOME/launch/config.txt
+CONFIGLOCAL=$HOME/IdeaProjects/CS3678.001-Project1/src/config.txt
 
 # Directory your java classes are in
 BINDIR=$PROJDIR/bin
@@ -17,7 +17,7 @@ PROG=Main
 
 n=0
 
-./dist.sh
+#./dist.sh
 ./cleanup.sh
 
 echo ""
