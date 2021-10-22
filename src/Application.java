@@ -89,13 +89,9 @@ class Application implements Listener {
                 writer.write(i + ": ");
                 if (neighborsMap.get(i) != null) {
                     neighborsMap.get(i).sort(Comparator.comparingInt(NodeID::getID));
-                    neighborsMap.get(i).forEach((nodeID) -> {
-                        try {
-                            writer.write(nodeID.getID()+ " ");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    });
+                    for (NodeID id : neighborsMap.get(i)) {
+                        writer.write(id.getID() + " ");
+                    }
                 }
                 if (i != (this.numberOfNodes - 1)) {
                     writer.write("\n");
