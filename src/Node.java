@@ -95,7 +95,6 @@ class Node {
         }
     }
 
-    //assuming that this method parses through the config file and saves the info
     private void readConfigFile(NodeID nodeIdentifier, String configFile) {
         try {
             //Begin read file
