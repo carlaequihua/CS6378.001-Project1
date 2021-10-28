@@ -80,7 +80,8 @@ class Node {
             System.out.println("[NODE] TEAR DOWN CALLED");
             sm.setTearDown();
             connections.values().forEach(thread -> {
-                while (!thread.getSocket().isClosed()) {
+                //Modified as NullPointException occurred
+                while (thread.getSocket() !=null && !thread.getSocket().isClosed()) {
                     try {
                         thread.setTearDown();
                         thread.getSocket().close();

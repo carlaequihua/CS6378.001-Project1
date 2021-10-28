@@ -35,9 +35,13 @@ class Application implements Listener {
     Node myNode;
     NodeID myID;
     int numberOfNodes;
+    NodeID[] neighbors;
 
     //Map of neighbors: key is the amount of hops, value is the arraylist of nodes at that distance
     HashMap<Integer, ArrayList<NodeID>> neighborsMap = new HashMap<>();
+
+    //Map of neighbors of each node: key is NodeID.identifier, value is the Message Component received from that node
+    HashMap<Integer, MessageComponent> neighborsInfo = new HashMap<>();
 
     boolean newInformationFound = false;
     int round = 1;
@@ -46,7 +50,22 @@ class Application implements Listener {
     //synchronized receive
     //invoked by Node class when it receives a message
     public synchronized void receive(Message message) {
+        MessageComponent mc = new MessageComponent(message.data);
 
+        if(!neighborsInfo.containsKey(message.source.getID())) {
+            neighborsInfo.put(message.source.getID(), mc);
+        }
+
+        //For Test
+        if(neighborsInfo.size() == neighbors.length+1) {
+            for (MessageComponent m:neighborsInfo.values()) {
+                System.out.println("RECEIVED FROM : "+m.getNodeID().getID());
+                System.out.println(m.toString());
+                System.out.println("----");
+            }
+
+            myNode.tearDown();
+        }
     }
 
     //If communication is broken with one neighbor, tear down the node
@@ -75,8 +94,17 @@ class Application implements Listener {
     public synchronized void run() {
         //Construct node
         myNode = new Node(myID, configFile, this);
-//        neighbors = myNode.getNeighbors();
+        neighbors = myNode.getNeighbors();
 //        brokenNeighbors = new boolean[neighbors.length];
+
+        MessageComponent mc = new MessageComponent(myID, MessageComponent.NEIGHBORS_INFO, neighbors);
+        Message m = new Message(myID, mc.toBytes());
+
+        neighborsInfo.put(myID.getID(), mc);
+
+        for (NodeID nID:neighbors) {
+            myNode.send(m, nID);
+        }
     }
 
     protected void generateOutputFile() {
