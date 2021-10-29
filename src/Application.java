@@ -25,6 +25,7 @@ during each round each process will send message to its neighbors
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 
@@ -34,11 +35,11 @@ class Application implements Listener {
     int numberOfNodes;
 
     //Map of neighbors: key is the amount of hops, value is the arraylist of nodes at that distance
-    HashMap<Integer, ArrayList<NodeID>> neighborsMap = new HashMap<>();
+    HashMap<Integer, NodeID[]> neighborsMap = new HashMap<>();
 
-    boolean newInformationFound = false;
-    int round = 1;
-    String configFile;
+    private boolean newInformationFound = false;
+    private int round = 1;
+    private String configFile;
 
     //synchronized receive
     //invoked by Node class when it receives a message
@@ -66,51 +67,16 @@ class Application implements Listener {
     public Application(NodeID identifier, String configFile) {
         myID = identifier;
         this.configFile = configFile;
-        noteOneHopNeighbors(configFile);
-    }
-
-    private void noteOneHopNeighbors(String configFile) {
-        try {
-            String line_txt;
-
-            FileReader f = new FileReader(configFile);
-            BufferedReader rline = new BufferedReader(f);
-
-            ArrayList<String> lines = new ArrayList<>(); // store each line of file in a list
-
-            while ((line_txt = rline.readLine()) != null) {
-                line_txt = line_txt.replaceAll("^\\s+", "");
-                if (line_txt.matches("^[0-9].*")) {
-                    if (line_txt.contains("#")) {
-                        line_txt = line_txt.substring(0, line_txt.indexOf("#"));
-                    }
-                    lines.add(line_txt);
-                    System.out.println(line_txt);
-                }
-            }
-            rline.close();
-
-            ArrayList<NodeID> nodeNeighbors = new ArrayList<>();
-
-            String[] oneHopNeighborsLine = lines.get(1 + this.myID.getID()).trim().split(" ");
-            for (String neighbor : oneHopNeighborsLine) {
-                if (neighbor.equals("#")) {
-                    break;
-                }
-                nodeNeighbors.add(new NodeID(Integer.parseInt(neighbor)));
-            }
-            neighborsMap.put(1, nodeNeighbors);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     //Synchronized run. Control only transfers to other threads once wait is called
     public synchronized void run() {
         //Construct node
         myNode = new Node(myID, configFile, this);
-//        neighbors = myNode.getNeighbors();
-//        brokenNeighbors = new boolean[neighbors.length];
+
+        neighborsMap.put(round, myNode.getNeighbors());
+        while (this.newInformationFound) {
+        }
     }
 
     protected void generateOutputFile() {
@@ -122,7 +88,7 @@ class Application implements Listener {
             for (int i = 1; i <= (this.numberOfNodes - 1); i++) {
                 writer.write(i + ": ");
                 if (neighborsMap.get(i) != null) {
-                    neighborsMap.get(i).sort(Comparator.comparingInt(NodeID::getID));
+                    Arrays.stream(neighborsMap.get(i)).sorted(Comparator.comparingInt(NodeID::getID));
                     for (NodeID id : neighborsMap.get(i)) {
                         writer.write(id.getID() + " ");
                     }
