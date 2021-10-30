@@ -1,3 +1,4 @@
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -27,7 +28,18 @@ public class ConnectionManager extends Thread {
     }
 
     public void setMsgQueue(Message m) {
+//        MessageComponent mc = new MessageComponent(m.data);
+//        System.out.println("CM.QUEUE: MESSAGE OF Node("+mc.getNodeID().getID()+") TO Node("+serverIdentifier.getID()+")");
+
         msgQueue.add(m);
+
+//        String str = "CM.QUEUE("+serverIdentifier.getID()+"):";
+//        for (int i=0; i<msgQueue.size(); i++) {
+//            Message tmp = (Message) msgQueue.get(i);
+//            MessageComponent tmpmc = new MessageComponent(tmp.data);
+//            str = str + tmpmc.getNodeID().getID() + ", ";
+//        }
+//        System.out.println(str);
     }
 
     public void setTearDown() {
@@ -42,7 +54,11 @@ public class ConnectionManager extends Thread {
     private boolean send(Message m) {
         try {
             if(socket != null && !socket.isClosed()) {
-                socket.getOutputStream().write(Util.messageToBytes(m));
+                // Changed so that each message can be read separately from the server
+                // message(Message) -> length(int) + message(Message)
+                DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+                dos.writeInt(Util.messageToBytes(m).length);
+                dos.write(Util.messageToBytes(m));
                 System.out.println("[CLIENT] MSG SENT : NodeId(" +m.source.getID()+ ") -> NodeId(" +serverIdentifier.getID()+ ") / Data(" +Payload.getPayload(m.data).messageType+ ")");
                 return true;
             }
@@ -75,7 +91,15 @@ public class ConnectionManager extends Thread {
                 if(msgQueue.size() > 0) {
                     Message m = (Message) msgQueue.get(0);
                     if (send(m)) {
-                        msgQueue.remove(0);
+                        msgQueue.remove(m);
+
+//                        String str = "CM.QUEUE("+serverIdentifier.getID()+"):";
+//                        for (int i=0; i<msgQueue.size(); i++) {
+//                            Message tmp = (Message) msgQueue.get(i);
+//                            MessageComponent tmpmc = new MessageComponent(tmp.data);
+//                            str = str + tmpmc.getNodeID().getID() + ", ";
+//                        }
+//                        System.out.println(str);
                     }
                 }
             }

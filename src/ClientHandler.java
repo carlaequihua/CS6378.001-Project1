@@ -1,7 +1,4 @@
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
 
@@ -27,21 +24,26 @@ public class ClientHandler extends Thread {
         while(true) {
             try {
                 byte buffer[] = new byte[maxBufferSize];
-                int size = dis.read(buffer);
 
                 // When a server receive a message from a neighbor
-                if (size > 0) {
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    baos.write(buffer, 0, size);
-                    Message m = Util.bytesToMessage(baos.toByteArray());
-                    System.out.println("[SERVER] MSG RECEIVED FROM : " + Util.getMessageStr(m));
-                    listener.receive(m);
+                // Message = length(int)+data(Message)
+                int len = dis.readInt();
+                if(len > 0) {
+                    int size = dis.read(buffer, 0, len);
 
-                // When a connection has been terminated by a neighbor
-                } else if (size == -1) {
-                    System.out.println("[SERVER] CONNECTION CLOSED FROM "+socket);
-                    listener.broken(clientNodeId);
-                    break;
+                    if (size > 0) {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        baos.write(buffer, 0, size);
+                        Message m = Util.bytesToMessage(baos.toByteArray());
+                        System.out.println("[SERVER] MSG RECEIVED FROM : " + Util.getMessageStr(m));
+                        listener.receive(m);
+
+                    // When a connection has been terminated by a neighbor
+                    } else if (size == -1) {
+                        System.out.println("[SERVER] CONNECTION CLOSED FROM "+socket);
+                        listener.broken(clientNodeId);
+                        break;
+                    }
                 }
 
             // When neighbor client has been killed, etc
@@ -51,10 +53,17 @@ public class ClientHandler extends Thread {
                 e.printStackTrace();
             }
 
+            // When other exception occurred => exit loop
+            catch (EOFException e) {
+                break;
+            }
+
             // When other exception occurred
             catch (IOException e) {
                 e.printStackTrace();
             }
+
+
         }
     }
 }
