@@ -42,6 +42,8 @@ class Application implements Listener {
     //key is NodeID.getID(), value is the MessageComponent received from that node
     HashMap<Integer, MessageComponent> neighborsMsgMap = new HashMap<>();
     HashMap<Integer, MessageComponent> completedNodeMap = new HashMap<>();
+	// mapping from node to hop
+    HashMap<NodeID,Integer> Node_hop = new HashMap<>();
 
 
     boolean newInformationFound = false;
@@ -82,6 +84,38 @@ class Application implements Listener {
 
         if (neighborsMsgMap.size() == numberOfNodes) {
             //TODO: calculation hops of each node from neighborsMsgMap and write to output file
+
+            // immediate neighbors
+            ArrayList<NodeID> immNbr = new ArrayList<>();
+            for(int i = 0; i<neighbors.length ; i++){
+                if(!Node_hop.containsKey(neighbors[i])) { // put if doesn't exist
+                    Node_hop.put(neighbors[i], 1);
+                    immNbr.add(neighbors[i]);
+                }
+            }
+            neighborsMap.put(1,immNbr);
+
+            // Rest of the nodes
+
+            for(int i = 1 ; i <= neighborsMap.size() ; i++){
+                ArrayList<NodeID> predNbr = neighborsMap.get(i); // get previous hop neighbors(parent)
+                ArrayList<NodeID> childNbr = new ArrayList<>(); // store new hop neighbors(child)
+                for(int j = 0 ; j<predNbr.size() ; j++){
+                    NodeID[] temp_n = neighborsMsgMap.get(predNbr.get(j)).getNeighbors();
+                    for(NodeID p : temp_n){
+                        // if not already exists
+                        if(!Node_hop.containsKey(p)) {
+                            Node_hop.put(p, i + 1);
+                            childNbr.add(p);
+                        }
+                    }
+
+                }
+                neighborsMap.put(i+1,childNbr);
+            }
+
+
+
             //Logging For Testing
             System.out.println(myID.getID() + ": All message received");
             for (MessageComponent m : neighborsMsgMap.values()) {
