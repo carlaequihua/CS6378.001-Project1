@@ -101,7 +101,7 @@ class Application implements Listener {
                 ArrayList<NodeID> predNbr = neighborsMap.get(i); // get previous hop neighbors(parent)
                 ArrayList<NodeID> childNbr = new ArrayList<>(); // store new hop neighbors(child)
                 for(int j = 0 ; j<predNbr.size() ; j++){
-                    NodeID[] temp_n = neighborsMsgMap.get(predNbr.get(j)).getNeighbors();
+                    NodeID[] temp_n = neighborsMsgMap.get(predNbr.get(j).getID()).getNeighbors();
                     for(NodeID p : temp_n){
                         // if not already exists
                         if(!Node_hop.containsKey(p)) {
