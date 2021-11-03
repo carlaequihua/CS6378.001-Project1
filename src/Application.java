@@ -104,7 +104,7 @@ class Application implements Listener {
                     NodeID[] temp_n = neighborsMsgMap.get(predNbr.get(j).getID()).getNeighbors();
                     for(NodeID p : temp_n){
                         // if not already exists
-                        if(!Node_hop.containsKey(p)) {
+                        if(!Node_hop.containsKey(p) && !(p.equals(myID))) {
                             Node_hop.put(p, i + 1);
                             childNbr.add(p);
                         }
