@@ -27,6 +27,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 
 class Application implements Listener {
     Node myNode;
@@ -43,7 +44,7 @@ class Application implements Listener {
     HashMap<Integer, MessageComponent> neighborsMsgMap = new HashMap<>();
     HashMap<Integer, MessageComponent> completedNodeMap = new HashMap<>();
 	// mapping from node to hop
-    HashMap<NodeID,Integer> Node_hop = new HashMap<>();
+    HashSet<Integer> Node_hop = new HashSet<>(); //HashMap<NodeID,Integer> Node_hop = new HashMap<>();
 
 
     boolean newInformationFound = false;
@@ -87,8 +88,8 @@ class Application implements Listener {
                 // immediate neighbors
                 ArrayList<NodeID> immNbr = new ArrayList<>();
                 for(int i = 0; i<neighbors.length ; i++){
-                    if(!Node_hop.containsKey(neighbors[i])) { // put if doesn't exist
-                        Node_hop.put(neighbors[i], 1);
+                    if(!Node_hop.contains(neighbors[i].getID())) { // put if doesn't exist
+                        Node_hop.add(neighbors[i].getID());
                         immNbr.add(neighbors[i]);
                     }
                 }
@@ -103,8 +104,8 @@ class Application implements Listener {
                         NodeID[] temp_n = neighborsMsgMap.get(predNbr.get(j).getID()).getNeighbors();
                         for(NodeID p : temp_n){
                             // if not already exists
-                            if(!Node_hop.containsKey(p) && !(p.equals(myID))) {
-                                Node_hop.put(p, i + 1);
+                            if(!(Node_hop.contains(p.getID())) && (p.getID() != myID.getID())) {
+                                Node_hop.add(p.getID());
                                 childNbr.add(p);
                             }
                         }
