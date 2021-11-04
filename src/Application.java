@@ -110,7 +110,7 @@ class Application implements Listener {
                         }
 
                     }
-                    neighborsMap.put(i+1,childNbr);
+                   if(childNbr.size() != 0) neighborsMap.put(i+1,childNbr);
                 }
 
                 //Logging For Testing
