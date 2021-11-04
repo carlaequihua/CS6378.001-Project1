@@ -43,7 +43,7 @@ class Application implements Listener {
     //key is NodeID.getID(), value is the MessageComponent received from that node
     HashMap<Integer, MessageComponent> neighborsMsgMap = new HashMap<>();
     HashMap<Integer, MessageComponent> completedNodeMap = new HashMap<>();
-	// mapping from node to hop
+    // mapping from node to hop
     HashSet<Integer> Node_hop = new HashSet<>(); //HashMap<NodeID,Integer> Node_hop = new HashMap<>();
 
 
@@ -87,31 +87,31 @@ class Application implements Listener {
 
                 // immediate neighbors
                 ArrayList<NodeID> immNbr = new ArrayList<>();
-                for(int i = 0; i<neighbors.length ; i++){
-                    if(!Node_hop.contains(neighbors[i].getID())) { // put if doesn't exist
+                for (int i = 0; i < neighbors.length; i++) {
+                    if (!Node_hop.contains(neighbors[i].getID())) { // put if doesn't exist
                         Node_hop.add(neighbors[i].getID());
                         immNbr.add(neighbors[i]);
                     }
                 }
-                neighborsMap.put(1,immNbr);
+                neighborsMap.put(1, immNbr);
 
                 // Rest of the nodes
 
-                for(int i = 1 ; i <= neighborsMap.size() ; i++){
+                for (int i = 1; i <= neighborsMap.size(); i++) {
                     ArrayList<NodeID> predNbr = neighborsMap.get(i); // get previous hop neighbors(parent)
                     ArrayList<NodeID> childNbr = new ArrayList<>(); // store new hop neighbors(child)
-                    for(int j = 0 ; j<predNbr.size() ; j++){
+                    for (int j = 0; j < predNbr.size(); j++) {
                         NodeID[] temp_n = neighborsMsgMap.get(predNbr.get(j).getID()).getNeighbors();
-                        for(NodeID p : temp_n){
+                        for (NodeID p : temp_n) {
                             // if not already exists
-                            if(!(Node_hop.contains(p.getID())) && (p.getID() != myID.getID())) {
+                            if (!(Node_hop.contains(p.getID())) && (p.getID() != myID.getID())) {
                                 Node_hop.add(p.getID());
                                 childNbr.add(p);
                             }
                         }
 
                     }
-                   if(childNbr.size() != 0) neighborsMap.put(i+1,childNbr);
+                    if (childNbr.size() != 0) neighborsMap.put(i + 1, childNbr);
                 }
 
                 //Logging For Testing
@@ -152,6 +152,7 @@ class Application implements Listener {
 
             //When process received all termination messages
             if (completedNodeMap.size() == numberOfNodes) {
+                generateOutputFile();
                 myNode.tearDown();
             }
         }
@@ -215,6 +216,7 @@ class Application implements Listener {
     }
 
     protected void generateOutputFile() {
+        System.out.println("Generating output file -----------");
         try {
             File file = new File(myID.getID() + "-" + configFile);
             file.setWritable(true);
