@@ -73,63 +73,61 @@ class Application implements Listener {
             //Keep message
             neighborsMsgMap.put(origin.getID(), mc);
 
-            //forward the information message to the neighbor nodes except pred, origin
+            //Forward the information message to the neighbor nodes except pred, origin
             for (NodeID nID : neighbors) {
                 if (nID.getID() != pred.getID() && nID.getID() != origin.getID()) {
                     Message nm = new Message(myID, mc.toBytes());
                     myNode.send(nm, nID);
                 }
             }
-        }
 
-        if (neighborsMsgMap.size() == numberOfNodes) {
-            //TODO: calculation hops of each node from neighborsMsgMap and write to output file
+            //When process received all information messages
+            if (neighborsMsgMap.size() == numberOfNodes) {
 
-            // immediate neighbors
-            ArrayList<NodeID> immNbr = new ArrayList<>();
-            for(int i = 0; i<neighbors.length ; i++){
-                if(!Node_hop.containsKey(neighbors[i])) { // put if doesn't exist
-                    Node_hop.put(neighbors[i], 1);
-                    immNbr.add(neighbors[i]);
-                }
-            }
-            neighborsMap.put(1,immNbr);
-
-            // Rest of the nodes
-
-            for(int i = 1 ; i <= neighborsMap.size() ; i++){
-                ArrayList<NodeID> predNbr = neighborsMap.get(i); // get previous hop neighbors(parent)
-                ArrayList<NodeID> childNbr = new ArrayList<>(); // store new hop neighbors(child)
-                for(int j = 0 ; j<predNbr.size() ; j++){
-                    NodeID[] temp_n = neighborsMsgMap.get(predNbr.get(j).getID()).getNeighbors();
-                    for(NodeID p : temp_n){
-                        // if not already exists
-                        if(!Node_hop.containsKey(p) && !(p.equals(myID))) {
-                            Node_hop.put(p, i + 1);
-                            childNbr.add(p);
-                        }
+                // immediate neighbors
+                ArrayList<NodeID> immNbr = new ArrayList<>();
+                for(int i = 0; i<neighbors.length ; i++){
+                    if(!Node_hop.containsKey(neighbors[i])) { // put if doesn't exist
+                        Node_hop.put(neighbors[i], 1);
+                        immNbr.add(neighbors[i]);
                     }
-
                 }
-                neighborsMap.put(i+1,childNbr);
-            }
+                neighborsMap.put(1,immNbr);
 
+                // Rest of the nodes
 
+                for(int i = 1 ; i <= neighborsMap.size() ; i++){
+                    ArrayList<NodeID> predNbr = neighborsMap.get(i); // get previous hop neighbors(parent)
+                    ArrayList<NodeID> childNbr = new ArrayList<>(); // store new hop neighbors(child)
+                    for(int j = 0 ; j<predNbr.size() ; j++){
+                        NodeID[] temp_n = neighborsMsgMap.get(predNbr.get(j).getID()).getNeighbors();
+                        for(NodeID p : temp_n){
+                            // if not already exists
+                            if(!Node_hop.containsKey(p) && !(p.equals(myID))) {
+                                Node_hop.put(p, i + 1);
+                                childNbr.add(p);
+                            }
+                        }
 
-            //Logging For Testing
-            System.out.println(myID.getID() + ": All message received");
-            for (MessageComponent m : neighborsMsgMap.values()) {
-                System.out.println("RECEIVED FROM : " + m.getNodeID().getID());
-                System.out.println(m.toString());
-                System.out.println("----");
-            }
+                    }
+                    neighborsMap.put(i+1,childNbr);
+                }
 
-            //Send a termination message to neighbors
-            MessageComponent tmc = new MessageComponent(myID, MessageComponent.NOTIFY_END, null);
-            Message tm = new Message(myID, tmc.toBytes());
-            completedNodeMap.put(myID.getID(), tmc);
-            for (NodeID nID : neighbors) {
-                myNode.send(tm, nID);
+                //Logging For Testing
+                System.out.println(myID.getID() + ": All message received");
+                for (MessageComponent m : neighborsMsgMap.values()) {
+                    System.out.println("RECEIVED FROM : " + m.getNodeID().getID());
+                    System.out.println(m.toString());
+                    System.out.println("----");
+                }
+
+                //Send a termination message to neighbors
+                MessageComponent tmc = new MessageComponent(myID, MessageComponent.NOTIFY_END, null);
+                Message tm = new Message(myID, tmc.toBytes());
+                completedNodeMap.put(myID.getID(), tmc);
+                for (NodeID nID : neighbors) {
+                    myNode.send(tm, nID);
+                }
             }
         }
     }
@@ -150,11 +148,11 @@ class Application implements Listener {
                     myNode.send(newMessage, nID);
                 }
             }
-        }
 
-        //When process received all termination messages
-        if (completedNodeMap.size() == numberOfNodes) {
-            myNode.tearDown();
+            //When process received all termination messages
+            if (completedNodeMap.size() == numberOfNodes) {
+                myNode.tearDown();
+            }
         }
     }
 
@@ -170,7 +168,6 @@ class Application implements Listener {
     public Application(NodeID identifier, String configFile) {
         myID = identifier;
         this.configFile = configFile;
-
         this.numberOfNodes = getTotalNumberOfNodes(configFile);
     }
 
