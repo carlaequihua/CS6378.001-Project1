@@ -4,6 +4,7 @@ public class MessageComponent implements java.io.Serializable
 {
     public static int NOTIFY_END = 0;
     public static int NEIGHBORS_INFO = 1;
+    public static int REQUEST_RESEND = 2;
 
     private NodeID nodeID;
     private int msgType;

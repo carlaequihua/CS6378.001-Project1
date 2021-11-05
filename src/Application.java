@@ -60,6 +60,8 @@ class Application implements Listener {
             receiveInformationMessage(message);
         } else if (mc.getMsgType() == MessageComponent.NOTIFY_END) {
             receiveTerminationMessage(message);
+        } else if (mc.getMsgType() == MessageComponent.REQUEST_RESEND) {
+            receiveResendMessage(message);
         }
     }
 
@@ -122,8 +124,11 @@ class Application implements Listener {
                     System.out.println("----");
                 }
 
+                //Generate result file
+                generateOutputFile();
+
                 //Send a termination message to neighbors
-                MessageComponent tmc = new MessageComponent(myID, MessageComponent.NOTIFY_END, null);
+                MessageComponent tmc = new MessageComponent(myID, MessageComponent.NOTIFY_END, neighbors);
                 Message tm = new Message(myID, tmc.toBytes());
                 completedNodeMap.put(myID.getID(), tmc);
                 for (NodeID nID : neighbors) {
@@ -148,14 +153,35 @@ class Application implements Listener {
                 if (nID.getID() != pred.getID() && nID.getID() != origin.getID()) {
                     myNode.send(newMessage, nID);
                 }
+
+                //When my neighbor received all information messages, but I didn't => reqeust resend
+                if (nID.getID() == origin.getID()) {
+                    if (completedNodeMap.size() != numberOfNodes) {
+                        MessageComponent requestMC = new MessageComponent(myID, MessageComponent.REQUEST_RESEND, neighbors);
+                        Message reqeustResendMessage = new Message(myID, requestMC.toBytes());
+                        myNode.send(reqeustResendMessage, nID);
+                    }
+                }
             }
 
             //When process received all termination messages
             if (completedNodeMap.size() == numberOfNodes) {
-                generateOutputFile();
                 myNode.tearDown();
             }
         }
+    }
+
+    private synchronized void receiveResendMessage(Message message) {
+        NodeID pred = message.source;
+        MessageComponent mc = new MessageComponent(message.data);
+
+        System.out.println("Received Request Message for Resend from node("+pred.getID()+")");
+        //Resend all messages to requester
+        for (MessageComponent m : neighborsMsgMap.values()) {
+            Message newMessage = new Message(myID, m.toBytes());
+            myNode.send(newMessage, pred);
+        }
+        System.out.println("Resend all messages to node("+pred.getID()+")");
     }
 
     //If communication is broken with one neighbor, tear down the node
@@ -164,7 +190,6 @@ class Application implements Listener {
             myNode.tearDown();
         }
     }
-
 
     //Constructor
     public Application(NodeID identifier, String configFile) {
@@ -218,7 +243,8 @@ class Application implements Listener {
     protected void generateOutputFile() {
         System.out.println("Generating output file -----------");
         try {
-            File file = new File(myID.getID() + "-" + configFile);
+            File cfgFile = new File(this.configFile);
+            File file = new File(myID.getID() + "-" + cfgFile.getName());
             file.setWritable(true);
             FileWriter writer = new FileWriter(file);
 

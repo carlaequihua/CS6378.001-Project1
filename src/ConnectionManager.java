@@ -59,7 +59,9 @@ public class ConnectionManager extends Thread {
                 DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
                 dos.writeInt(Util.messageToBytes(m).length);
                 dos.write(Util.messageToBytes(m));
-                System.out.println("[CLIENT] MSG SENT : NodeId(" +m.source.getID()+ ") -> NodeId(" +serverIdentifier.getID()+ ") / Data(" +Payload.getPayload(m.data).messageType+ ")");
+                dos.flush();
+                MessageComponent mc = new MessageComponent(m.data);
+                System.out.println("[CLIENT] MSG SENT TO : NodeId(" +serverIdentifier.getID()+ ") / OriginId("+mc.getNodeID().getID()+") / Data(" +mc.getMsgType()+ ")");
                 return true;
             }
         } catch (IOException e) {

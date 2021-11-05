@@ -3,7 +3,8 @@ import java.io.*;
 public class Util {
     //Get message information by string type
     public static String getMessageStr(Message m) {
-        return "NodeId("+m.source.getID()+") / Data("+Payload.getPayload(m.data).messageType+")";
+        MessageComponent mc = new MessageComponent(m.data);
+        return "NodeId("+m.source.getID()+") / OriginID("+mc.getNodeID().getID()+") / Data("+mc.getMsgType()+")";
     }
 
 
@@ -24,6 +25,7 @@ public class Util {
         catch(Exception e)
         {
             System.out.println("Unable to serialize Message");
+            e.printStackTrace();
         }
         finally
         {
@@ -55,6 +57,7 @@ public class Util {
         }
         catch(Exception e)
         {
+            e.printStackTrace();
             System.out.println("Unable to deserialize Message");
         }
         finally
