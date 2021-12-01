@@ -1,16 +1,20 @@
-public class DLock
-{
+/*
+    Provide the abstraction of a traditional lock.
+ */
+
+public class DLock {
     // implementation-specific private data as needed
     // public constructor
-    public DLock(NodeID identifier, String configFileName ){
+    public DLock(NodeID identifier, String configFileName) {
 
     }
+
     // public methods
-    public void lock( ){
+    public void lock() {
 
     }
 
-    public void unlock( ){
+    public void unlock() {
 
     }
     // implementation specific private methods as needed

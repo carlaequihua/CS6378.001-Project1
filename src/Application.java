@@ -10,34 +10,17 @@
     random variables with exponential probability distribution.
  */
 
-class Application implements Listener {
-    private final String configFile;
-    Node myNode;
+class Application {
+    String configFile;
     NodeID myID;
-    int numberOfNodes;
-    NodeID[] neighbors;
-    //synchronized receive
-    //invoked by Node class when it receives a message
-    public synchronized void receive(Message message) {
-
-    }
-
-
-    //If communication is broken with one neighbor, tear down the node
-    public synchronized void broken(NodeID neighbor) {
-
-    }
 
     //Constructor
-    public Application(NodeID identifier, String configFile) {
-        myID = identifier;
-        this.configFile = configFile;
+    Application(NodeID id, String configFile, int interRequestDelay, int csExecutionTime, int criticalSectionRequestsAmounnt) {
+
     }
 
     //Synchronized run. Control only transfers to other threads once wait is called
     public synchronized void run() {
-        //Construct node
-        myNode = new Node(myID, configFile, this);
-        neighbors = myNode.getNeighbors();
+
     }
 }
