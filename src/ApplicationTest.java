@@ -1,13 +1,11 @@
 import java.util.ArrayList;
 
+/*
+    Design a mechanism to test the correctness of your synhronization layer.
+    Your testing mechanism should ascertain that at most one process (or node) can hold the lock at any time.
+ */
 public class ApplicationTest {
     public static void main(String[] args) {
         Application app = new Application(new NodeID(6), "testFile.txt");
-        ArrayList<NodeID> list = new ArrayList<>();
-        list.add(new NodeID(14));
-        list.add(new NodeID(1));
-        app.neighborsMap.put(1, list);
-        app.numberOfNodes = 3;
-        app.generateOutputFile();
     }
 }
