@@ -1,50 +1,45 @@
 import java.io.*;
 
-public class MessageComponent implements java.io.Serializable
+public class MessageComponent_project2 implements java.io.Serializable
 {
-    public static int REQUEST = 0;
-    public static int RESPONSE = 1;
+    public static int NOTIFY_END = 0;
+    public static int NEIGHBORS_INFO = 1;
+    public static int REQUEST_RESEND = 2;
 
     private NodeID nodeID;
-    private NodeID targetID;
     private int msgType;
-    private int timestamp;
+    private NodeID[] neighbors;
 
-    public MessageComponent(NodeID nodeID, NodeID targetID, int msgType, int timestamp)
+    public MessageComponent_project2(NodeID nodeID, int msgType, NodeID[] neighbors)
     {
         this.nodeID = nodeID;
-        this.targetID = targetID;
         this.msgType = msgType;
-        this.timestamp = timestamp;
+        this.neighbors = neighbors;
     }
 
-    public MessageComponent(byte[] data)
+    public MessageComponent_project2(byte[] data)
     {
         ByteArrayInputStream bis = new ByteArrayInputStream(data);
         try (ObjectInputStream ois = new ObjectInputStream(bis)) {
-            MessageComponent mc = (MessageComponent) ois.readObject();
+            MessageComponent_project2 mc = (MessageComponent_project2) ois.readObject();
             this.nodeID = mc.getNodeID();
-            this.targetID = mc.getTargetID();
             this.msgType = mc.getMsgType();
-            this.timestamp = mc.getTimestamp();
+            this.neighbors = mc.getNeighbors();
         } catch (Exception e) {
-            System.out.println("Unable to deserialize CSMessage");
+            System.out.println("Unable to deserialize MessageComponent");
         }
     }
 
     public NodeID getNodeID() {
         return nodeID;
     }
-    public NodeID getTargetID() {
-        return targetID;
-    }
 
     public int getMsgType() {
         return msgType;
     }
 
-    public int getTimestamp() {
-        return timestamp;
+    public NodeID[] getNeighbors() {
+        return neighbors;
     }
 
     public byte[] toBytes() {
@@ -60,7 +55,7 @@ public class MessageComponent implements java.io.Serializable
         }
         catch(Exception e)
         {
-            System.out.println("Unable to serialize CSMessage");
+            System.out.println("Unable to serialize MessageComponent");
         }
         finally
         {
@@ -79,9 +74,15 @@ public class MessageComponent implements java.io.Serializable
     public String toString() {
         String str = "";
         str += "MC.nodeId = "+this.nodeID.getID()+"\n";
-        str += "MC.targetId = "+this.targetID.getID()+"\n";
         str += "MC.msgType = "+this.msgType+"\n";
-        str += "MC.timestamp = "+this.timestamp+"\n";
+        str += "MC.neighbors = [";
+        for(int i=0; i<this.neighbors.length; i++) {
+            str += this.neighbors[i].getID();
+            if(i != this.neighbors.length-1) {
+                str += ", ";
+            }
+        }
+        str += "]";
 
         return str;
     }
