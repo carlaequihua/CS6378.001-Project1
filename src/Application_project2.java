@@ -41,8 +41,8 @@ class Application_project2 implements Listener {
     //neighborsMsgMap: NEIGHBORS_INFO message of each node
     //completedNodeMap: NOTIFY_END message of each node
     //key is NodeID.getID(), value is the MessageComponent received from that node
-    HashMap<Integer, MessageComponent> neighborsMsgMap = new HashMap<>();
-    HashMap<Integer, MessageComponent> completedNodeMap = new HashMap<>();
+    HashMap<Integer, MessageComponent_project2> neighborsMsgMap = new HashMap<>();
+    HashMap<Integer, MessageComponent_project2> completedNodeMap = new HashMap<>();
     // mapping from node to hop
     HashSet<Integer> Node_hop = new HashSet<>(); //HashMap<NodeID,Integer> Node_hop = new HashMap<>();
 
@@ -54,19 +54,19 @@ class Application_project2 implements Listener {
     //synchronized receive
     //invoked by Node class when it receives a message
     public synchronized void receive(Message message) {
-        MessageComponent mc = new MessageComponent(message.data);
+        MessageComponent_project2 mc = new MessageComponent_project2(message.data);
 
-        if (mc.getMsgType() == MessageComponent.NEIGHBORS_INFO) {
+        if (mc.getMsgType() == MessageComponent_project2.NEIGHBORS_INFO) {
             receiveInformationMessage(message);
-        } else if (mc.getMsgType() == MessageComponent.NOTIFY_END) {
+        } else if (mc.getMsgType() == MessageComponent_project2.NOTIFY_END) {
             receiveTerminationMessage(message);
-        } else if (mc.getMsgType() == MessageComponent.REQUEST_RESEND) {
+        } else if (mc.getMsgType() == MessageComponent_project2.REQUEST_RESEND) {
             receiveResendMessage(message);
         }
     }
 
     private synchronized void receiveInformationMessage(Message message) {
-        MessageComponent mc = new MessageComponent(message.data);
+        MessageComponent_project2 mc = new MessageComponent_project2(message.data);
 
         NodeID pred = message.source;
         NodeID origin = mc.getNodeID();
@@ -118,7 +118,7 @@ class Application_project2 implements Listener {
 
                 //Logging For Testing
                 System.out.println(myID.getID() + ": All message received");
-                for (MessageComponent m : neighborsMsgMap.values()) {
+                for (MessageComponent_project2 m : neighborsMsgMap.values()) {
                     System.out.println("RECEIVED FROM : " + m.getNodeID().getID());
                     System.out.println(m.toString());
                     System.out.println("----");
@@ -128,7 +128,7 @@ class Application_project2 implements Listener {
                 generateOutputFile();
 
                 //Send a termination message to neighbors
-                MessageComponent tmc = new MessageComponent(myID, MessageComponent.NOTIFY_END, neighbors);
+                MessageComponent_project2 tmc = new MessageComponent_project2(myID, MessageComponent_project2.NOTIFY_END, neighbors);
                 Message tm = new Message(myID, tmc.toBytes());
                 completedNodeMap.put(myID.getID(), tmc);
                 for (NodeID nID : neighbors) {
@@ -139,7 +139,7 @@ class Application_project2 implements Listener {
     }
 
     private synchronized void receiveTerminationMessage(Message message) {
-        MessageComponent mc = new MessageComponent(message.data);
+        MessageComponent_project2 mc = new MessageComponent_project2(message.data);
 
         NodeID pred = message.source;
         NodeID origin = mc.getNodeID();
@@ -157,7 +157,7 @@ class Application_project2 implements Listener {
                 //When my neighbor received all information messages, but I didn't => reqeust resend
                 if (nID.getID() == origin.getID()) {
                     if (completedNodeMap.size() != numberOfNodes) {
-                        MessageComponent requestMC = new MessageComponent(myID, MessageComponent.REQUEST_RESEND, neighbors);
+                        MessageComponent_project2 requestMC = new MessageComponent_project2(myID, MessageComponent_project2.REQUEST_RESEND, neighbors);
                         Message reqeustResendMessage = new Message(myID, requestMC.toBytes());
                         myNode.send(reqeustResendMessage, nID);
                     }
@@ -173,11 +173,11 @@ class Application_project2 implements Listener {
 
     private synchronized void receiveResendMessage(Message message) {
         NodeID pred = message.source;
-        MessageComponent mc = new MessageComponent(message.data);
+        MessageComponent_project2 mc = new MessageComponent_project2(message.data);
 
         System.out.println("Received Request Message for Resend from node("+pred.getID()+")");
         //Resend all messages to requester
-        for (MessageComponent m : neighborsMsgMap.values()) {
+        for (MessageComponent_project2 m : neighborsMsgMap.values()) {
             Message newMessage = new Message(myID, m.toBytes());
             myNode.send(newMessage, pred);
         }
@@ -231,7 +231,7 @@ class Application_project2 implements Listener {
         myNode = new Node(myID, configFile, this);
         neighbors = myNode.getNeighbors();
 
-        MessageComponent mc = new MessageComponent(myID, MessageComponent.NEIGHBORS_INFO, neighbors);
+        MessageComponent_project2 mc = new MessageComponent_project2(myID, MessageComponent_project2.NEIGHBORS_INFO, neighbors);
         Message m = new Message(myID, mc.toBytes());
         neighborsMsgMap.put(myID.getID(), mc);
 
