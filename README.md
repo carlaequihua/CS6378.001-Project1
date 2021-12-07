@@ -1,4 +1,4 @@
-# CS6378.001-Project1
+# CS6378.001-Project3
 >Team - Gandhar Satish Joshi (gsj190000), Honggi Choi (hxc200011), Carla Equihua Ramirez (cme150030) 
 1. Place all of the Java files on the dcXX machine.
 2. Run ```javac *.java```.
