@@ -2,25 +2,6 @@
     Provide the abstraction of a traditional lock.
  */
 
-/*
-    The synchronization layer will consist of Ricart and Agrawala’s
-    distributed mutual exclusion protocol and provide the abstraction of a traditional lock (DLock).
-
-
-Ricart and Agrawala's alg:
-    On generating a critical section request:
-        • Broadcast the request to all processes.
-    On receiving a critical section request from another process:
-        • Send a REPLY message to the requesting process if:
-            • Pi has no unfulfilled request of its own, or
-            • Pi ’s unfulfilled request has larger timestamp than that of the received request.
-                Otherwise, defer sending the REPLY message.
-    Condition for critical section entry:
-        • Pi has received a REPLY message from all processes.
-    On leaving the critical section:
-        • Send all deferred REPLY messages.
- */
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
