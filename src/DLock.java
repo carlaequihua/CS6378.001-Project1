@@ -2,6 +2,25 @@
     Provide the abstraction of a traditional lock.
  */
 
+/*
+    The synchronization layer will consist of Ricart and Agrawala’s
+    distributed mutual exclusion protocol and provide the abstraction of a traditional lock (DLock).
+
+
+Ricart and Agrawala's alg:
+    On generating a critical section request:
+        • Broadcast the request to all processes.
+    On receiving a critical section request from another process:
+        • Send a REPLY message to the requesting process if:
+            • Pi has no unfulfilled request of its own, or
+            • Pi ’s unfulfilled request has larger timestamp than that of the received request.
+                Otherwise, defer sending the REPLY message.
+    Condition for critical section entry:
+        • Pi has received a REPLY message from all processes.
+    On leaving the critical section:
+        • Send all deferred REPLY messages.
+ */
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,8 +54,8 @@ public class DLock implements Listener {
         myNode = new Node(myID, configFile, this);
         neighbors = myNode.getNeighbors();
 
-        for(int i=0; i<100; i++) {
-            for(int j=0; j<1024; j++) {
+        for (int i = 0; i < 100; i++) {
+            for (int j = 0; j < 1024; j++) {
                 fwdRequestCheck[i][j] = 0;
                 fwdResponseCheck[i][j] = 0;
             }
@@ -65,7 +84,7 @@ public class DLock implements Listener {
 
         for (NodeID nID : neighbors) {
             for (MessageComponent mc : jobSchedule) {
-                if (mc.getNodeID().getID() != myID.getID() ) {
+                if (mc.getNodeID().getID() != myID.getID()) {
                     MessageComponent nmc = new MessageComponent(myID, mc.getNodeID(), MessageComponent.RESPONSE, clock);
                     Message nm = new Message(myID, nmc.toBytes());
                     myNode.send(nm, nID);
@@ -75,9 +94,6 @@ public class DLock implements Listener {
             }
         }
     }
-    // implementation specific private methods as needed
-
-
 
     //synchronized receive
     //invoked by Node class when it receives a message
@@ -85,23 +101,23 @@ public class DLock implements Listener {
         System.out.println("[DLOCK] receive() =>");
         MessageComponent mc = new MessageComponent(message.data);
 
-        if(mc.getTimestamp() > clock) {
+        if (mc.getTimestamp() > clock) {
             clock = mc.getTimestamp();
         }
 
         if (mc.getMsgType() == MessageComponent.REQUEST) {
-            receiveReqeustMessage(message);
+            receiveRequestMessage(message);
         } else if (mc.getMsgType() == MessageComponent.RESPONSE) {
             receiveResponseMessage(message);
         }
     }
 
-    private synchronized void receiveReqeustMessage(Message message) {
-        System.out.println("[DLOCK] receiveReqeustMessage() =>");
+    private synchronized void receiveRequestMessage(Message message) {
+        System.out.println("[DLOCK] receiveRequestMessage() =>");
         MessageComponent mc = new MessageComponent(message.data);
 
         //Propagate
-        if(fwdRequestCheck[mc.getNodeID().getID()][mc.getTimestamp()]==0) {
+        if (fwdRequestCheck[mc.getNodeID().getID()][mc.getTimestamp()] == 0) {
             //Forward the information message to the neighbor nodes except pred, origin
             NodeID pred = message.source;
             NodeID origin = mc.getNodeID();
@@ -111,13 +127,12 @@ public class DLock implements Listener {
                     myNode.send(nm, nID);
                 }
             }
-
-            fwdRequestCheck[mc.getNodeID().getID()][mc.getTimestamp()]=1;
+            fwdRequestCheck[mc.getNodeID().getID()][mc.getTimestamp()] = 1;
         }
 
         //Send Response
-        if(myCSWaiting && mc.getTimestamp()>=clock) {
-            if(mc.getTimestamp()==clock && mc.getNodeID().getID()< myID.getID()) {
+        if (myCSWaiting && mc.getTimestamp() > clock) {
+            if (mc.getTimestamp() == clock && mc.getNodeID().getID() < myID.getID()) {
                 // Send Response
                 MessageComponent nmc = new MessageComponent(myID, mc.getNodeID(), MessageComponent.RESPONSE, clock);
                 Message m = new Message(myID, nmc.toBytes());
@@ -144,17 +159,16 @@ public class DLock implements Listener {
         NodeID pred = message.source;
         NodeID origin = mc.getNodeID();
 
-        if(mc.getTargetID().getID()==myID.getID()) {
-            if(!CSResponseMap.containsKey(origin.getID())) {
+        if (mc.getTargetID().getID() == myID.getID()) {
+            if (!CSResponseMap.containsKey(origin.getID())) {
                 CSResponseMap.put(origin.getID(), mc);
 
                 //Enter Critical Section
-                if(CSResponseMap.size()==numberOfNodes-1) {
+                if (CSResponseMap.size() == numberOfNodes - 1) {
                     listener.executeCS();
                 }
             }
-        }
-        else if(fwdResponseCheck[mc.getNodeID().getID()][mc.getTimestamp()]==0) {
+        } else if (fwdResponseCheck[mc.getNodeID().getID()][mc.getTimestamp()] == 0) {
             //Forward the information message to the neighbor nodes except pred, origin
             for (NodeID nID : neighbors) {
                 if (nID.getID() != pred.getID() && nID.getID() != origin.getID()) {
@@ -162,15 +176,14 @@ public class DLock implements Listener {
                     myNode.send(nm, nID);
                 }
             }
-
-            fwdResponseCheck[mc.getNodeID().getID()][mc.getTimestamp()]=1;
+            fwdResponseCheck[mc.getNodeID().getID()][mc.getTimestamp()] = 1;
         }
     }
 
 
     //If communication is broken with one neighbor, tear down the node
     public synchronized void broken(NodeID neighbor) {
-            myNode.tearDown();
+        myNode.tearDown();
     }
 
     private int getTotalNumberOfNodes(String configFile) {
